@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\User;
+use DateTime;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
@@ -61,5 +62,23 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $user->setPassword($newHashedPassword);
         $this->_em->persist($user);
         $this->_em->flush();
+    }
+
+    /**
+     * @param DateTime $date
+     * @return User[]
+     */
+    public function findOlderThan(DateTime $date): array
+    {
+        $qb = $this->createQueryBuilder('user')
+            ->select([
+                'user.id',
+                'user.email',
+                'user.password',
+                'user.roles',
+            ])
+            ->where('user.createdAt < :date')
+            ->setParameter('date', $date);
+        return $qb->getQuery()->getResult();
     }
 }

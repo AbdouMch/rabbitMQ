@@ -4,10 +4,12 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
-
+    exportDirectory: '%env(resolve:EXPORT_DIR)%'
 services:
     # default configuration for services in *this* file
     _defaults:
+        bind:
+            $exportDirectory: exportDirectory
         autowire: true      # Automatically injects dependencies in your services.
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
 
@@ -22,3 +24,7 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+    App\Messenger\Handler\ExportHandler:
+        tags:
+            name: messenger.message_handler
+            handles: App\Messenger\Message\ExportMessage
