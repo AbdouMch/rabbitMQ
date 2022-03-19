@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  intranet_db:
+    container_name: intranet_db
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - ${MYSQL_PORT}:3306
+    volumes:
+      - ${DB_PATH}:/var/lib/mysql:cached
+      - ./docker/mysql/auth.cnf:/etc/mysql/conf.d/auth.cnf:ro
+    networks:
+      - intranet_network
+
+  intranet_rabbitmq:
+    container_name: intranet_rabbitmq
+    image: rabbitmq:3.9-management
+    environment:
+      HOSTNAME: ${RABBITMQ_HOSTNAME}
+    ports:
+      - ${RABBITMQ_PORT}:5672
+      - ${RABBITMQ_MANAGEMENT_PORT}:15672
+    volumes:
+      - ${RABBITMQ_PATH}:/var/lib/rabbitmq:cached
+    networks:
+      - intranet_network
+
+  maildev:
+    image: maildev/maildev
+    container_name: intranet_maildev
+    command: bin/maildev --web 80 --smtp 25 --hide-extensions STARTTLS
+    ports:
+      - ${MAILDEV_PORT}:80
+    restart: always
+    networks:
+      - intranet_network
+
+
+  intranet_php:
+    container_name: intranet_php
+    build: docker/php
+    volumes:
+      - .:/srv/app
+        # mapping local VS remote du fichier de conf de xdebug
+      - ./docker/php/conf.d/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+    networks:
+      - intranet_network
+    # pour utilisation avec phpstorm : afin que l'IDE puisse
+    # aller chercher le bon nom du server php remote de debug
+    environment:
+      PHP_IDE_CONFIG: 'serverName=127.0.0.1'
+
+  intranet_nginx:
+    container_name: intranet_nginx
+    build: docker/nginx
+    depends_on:
+      - intranet_php
+    volumes:
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./public:/srv/app/public:ro
+    ports:
+      - '80:80'
+      - '443:443'
+    networks:
+      - intranet_network
+
+networks:
+  intranet_network:
+    external: true
