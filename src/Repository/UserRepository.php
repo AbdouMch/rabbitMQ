@@ -72,12 +72,12 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     {
         $qb = $this->createQueryBuilder('user')
             ->select([
-                'user.id',
-                'user.email',
-                'user.password',
-                'user.roles',
+                'user.id as ID',
+                'user.email as EMAIL',
+                'user.password as PASSWORD',
+                'user.roles as ROLES',
             ])
-            ->where('user.createdAt < :date')
+            ->where('user.createdAt <= :date')
             ->setParameter('date', $date);
         return $qb->getQuery()->getResult();
     }

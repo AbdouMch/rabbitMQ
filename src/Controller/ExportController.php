@@ -26,7 +26,7 @@ class ExportController extends AbstractController
             $user = $this->getUser();
             $exportMessage = new ExportMessage($user->getCreatedAt(), $user->getId(), $data['email']);
             $messageBus->dispatch($exportMessage);
-            $this->redirectToRoute('app_home');
+            return $this->redirectToRoute('app_home');
         }
         return $this->render('export/export.html.twig', [
             'controller_name' => 'ExportController',

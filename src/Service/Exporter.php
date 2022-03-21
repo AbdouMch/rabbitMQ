@@ -32,7 +32,7 @@ class Exporter
         $owner = $this->em->getRepository(User::class)->find($ownerId);
         $users = $this->em->getRepository(User::class)->findOlderThan($date);
         $content = $this->serializer->encode($users, 'csv');
-        $filename = $this->exportDirectory . $date->getTimestamp() . self::USER . uniqid(self::USER, true) . ".csv";
+        $filename = $date->getTimestamp() . uniqid(self::USER, true) . ".csv";
         $export = (new Export())
             ->setFilename($filename)
             ->setUser($owner);
@@ -43,10 +43,12 @@ class Exporter
     private function saveFile(string $filename, $content)
     {
         $filename = $this->exportDirectory . $filename;
-//        if (!$this->filesystem->exists($filename)) {
-//            $this->filesystem->touch($filename);
-//        }
+        if (!$this->filesystem->exists($filename)) {
+            $this->filesystem->touch($filename);
+        }
         $this->filesystem->dumpFile($filename, $content);
+
+//        file_put_contents($filename, $content);
     }
 
 }
